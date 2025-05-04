@@ -1,3 +1,7 @@
+# Create an uploads directory in /etc/nginx/data to serve images
+
+
+
 server {
     listen 443 ssl;
     server_name api.gocnhinthitruong.com;
