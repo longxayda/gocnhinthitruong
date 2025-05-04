@@ -252,7 +252,13 @@ app.post('/api/editor/upload', upload.single('image'), (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
-    const imageUrl = `http://localhost:${PORT}/uploads/${req.file.filename}`;
+
+    // Lấy BASE_URL từ môi trường hoặc dùng giá trị mặc định
+    const baseUrl = process.env.BASE_URL || 'https://api.gocnhinthitruong.com';
+
+    // Tạo URL đúng
+    const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
+
     console.log('Uploaded file:', req.file);
     res.status(200).json({ imageUrl });
   } catch (error) {

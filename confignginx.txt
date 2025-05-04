@@ -1,13 +1,38 @@
 # Create an uploads directory in /etc/nginx/data to serve images
+# Step 1: Point DNS of subdomain (api.example.com) to VPS ip address.
+| Type | Name | Value          |
+| ---- | ---- | -------------- |
+| A    | api  | Your VPS IP |
+
+# Step 2: Install Certbot
+sudo apt update
+sudo apt install certbot python3-certbot-nginx
+
+# Step 3: 
+sudo systemctl stop nginx  # if Nginx is on
+sudo certbot certonly --standalone -d api.gocnhinthitruong.com
+sudo systemctl start nginx
+
+# Step 4: After create, you will have these files
+/etc/letsencrypt/live/api.gocnhinthitruong.com/fullchain.pem
+/etc/letsencrypt/live/api.gocnhinthitruong.com/privkey.pem
 
 
+# Modify nginx config file to these
+sudo nano /etc/nginx/sites-available/api.gocnhinthitruong.com
+
+server {
+    listen 80;
+    server_name api.gocnhinthitruong.com;
+    return 301 https://$host$request_uri;
+}
 
 server {
     listen 443 ssl;
     server_name api.gocnhinthitruong.com;
 
-    ssl_certificate /path/to/fullchain.pem;
-    ssl_certificate_key /path/to/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/api.gocnhinthitruong.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/api.gocnhinthitruong.com/privkey.pem;
 
     location /uploads/ {
         root /etc/nginx/data;
@@ -16,9 +41,116 @@ server {
     }
 
     location / {
-        proxy_pass http://localhost:5000; # Chạy backend trên cổng 5000
+        proxy_pass http://localhost:5000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
 }
+
+# After that:
+sudo ln -s /etc/nginx/sites-available/api.gocnhinthitruong.com /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+
+
+
+
+########################################
+########################################
+########################################
+
+
+If you have another subdomain (webhook.example.com), repeat the above steps
+
+1. Trỏ DNS về IP VPS
+2. Tạo SSL riêng bằng Certbot
+3. Tạo file cấu hình Nginx riêng, trỏ tới port của service webhook (ví dụ port 7000)
+
+---
+
+## ✅ Các bước cụ thể:
+
+### **Bước 1: Trỏ DNS subdomain mới**
+
+Trong DNS domain:
+
+```
+Type: A  
+Name: webhook  
+Value: [IP VPS của bạn]
+```
+
+---
+
+### **Bước 2: Tạo chứng chỉ SSL cho subdomain mới**
+
+Dừng Nginx để tránh chiếm port 80:
+
+```bash
+sudo systemctl stop nginx
+```
+
+Tạo SSL:
+
+```bash
+sudo certbot certonly --standalone -d webhook.gocnhinthitruong.com
+```
+
+Khởi động lại Nginx:
+
+```bash
+sudo systemctl start nginx
+```
+
+---
+
+### **Bước 3: Tạo cấu hình Nginx cho webhook**
+
+Tạo file:
+
+```bash
+sudo nano /etc/nginx/sites-available/webhook.gocnhinthitruong.com
+```
+
+Giả sử webhook server chạy ở port `7000`, cấu hình như sau:
+
+```nginx
+server {
+    listen 80;
+    server_name webhook.gocnhinthitruong.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name webhook.gocnhinthitruong.com;
+
+    ssl_certificate /etc/letsencrypt/live/webhook.gocnhinthitruong.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/webhook.gocnhinthitruong.com/privkey.pem;
+
+    location / {
+        proxy_pass http://localhost:7000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+Kích hoạt file:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/webhook.gocnhinthitruong.com /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+---
+
+### ✅ Kết quả:
+
+Giờ bạn có thể truy cập:
+
+```
+https://webhook.gocnhinthitruong.com
+```
