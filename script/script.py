@@ -142,6 +142,7 @@ def scheduled_job():
     send_articles_to_server(articles, topic="tintuc")  # Gửi từng bài viết đến API
 
 # Lên lịch chạy theo giờ
+
 schedule.every().day.at("08:00").do(scheduled_job)
 schedule.every().day.at("11:30").do(scheduled_job)
 schedule.every().day.at("17:00").do(scheduled_job)

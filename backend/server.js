@@ -13,15 +13,15 @@ app.use(cors());
 app.use(express.json());
 
 const path = require('path');
-// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/uploads', express.static('/etc/nginx/data/uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// app.use('/uploads', express.static('/etc/nginx/data/uploads'));
 
 let currentAccessToken = null;
 const JWT_SECRET = 'tôi-đã-ở-đây-power5@2024';
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, '/etc/nginx/data/uploads/'); // Lưu vào thư mục ngoài
+    cb(null, path.join(__dirname, 'uploads'));
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + '-' + file.originalname);
