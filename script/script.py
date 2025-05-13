@@ -67,7 +67,7 @@ def lambda_handler(event, context):
         "https://cafef.vn/tai-chinh-quoc-te.chn",
         "https://blogtienao.com/",
         "https://cafebitcoin.org/",
-        "https://tradecoinvn.net/",
+        # "https://tradecoinvn.net/",
     ]
     messages = []
 
