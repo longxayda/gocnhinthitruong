@@ -27,7 +27,14 @@ nltk.download("punkt")
 DEFAULT_IMG=""
 
 def make_get_request(url: str):
-    return url, requests.get(url)
+    try:
+        response = requests.get(url, timeout=10)  # timeout để tránh treo
+        response.raise_for_status()  # phát hiện lỗi HTTP 4xx, 5xx
+        return url, response
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Lỗi khi gửi GET đến {url}: {e}")
+        return url, None
+    # return url, requests.get(url)
 
 def make_article_request(article_link):
     return Article(url=article_link)
@@ -65,15 +72,17 @@ def threading_function(itrs: Iterable, func: Callable, is_sequential=False):
 def lambda_handler(event, context):
     urls = [
         "https://cafef.vn/tai-chinh-quoc-te.chn",
-        "https://blogtienao.com/",
-        "https://cafebitcoin.org/",
-        # "https://tradecoinvn.net/",
+        # "https://blogtienao.com/",
+        # "https://cafebitcoin.org/",
+        # "https://block24.ai/",
     ]
     messages = []
 
     resps = threading_function(urls, make_get_request)
 
     for url, resp in resps:
+        if resp is None:
+            continue
         soup = BeautifulSoup(resp.text, "html.parser")
         if "cafef" in url:
             headlines = soup.find_all("div", class_="firstitem")
@@ -117,7 +126,6 @@ def lambda_handler(event, context):
         chat_content = f"{title} \n{summary} \n{link}"
         summarized_contents.append(chat_content)
         summarized_content_with_thumbnail.append(payload)
-
     result_json = json.dumps(summarized_content_with_thumbnail, ensure_ascii=False)
     # threading_function(summarized_contents, process_telegram)
     return {"body": result_json}
@@ -127,10 +135,10 @@ API_URL = "https://api.gocnhinthitruong.com/api/articles/{topic}"  # Địa ch�
 def send_articles_to_server(articles, topic="tintuc"):
     for article in articles:
         response = requests.post(API_URL.format(topic=topic), json=article)
-        if response.status_code == 201:
+        if response.status_code == 201 or response.status_code == 200:
             print(f"✔ Đã gửi bài viết: {article['title']}")
         else:
-            print(f"❌ Lỗi khi gửi bài viết: {response.text}")
+            print(f"❌ Lỗi khi gửi bài viết:{response.status_code}")
 
 # schedule
 def scheduled_job():
@@ -143,6 +151,7 @@ def scheduled_job():
 
 # Lên lịch chạy theo giờ
 
+# schedule.every().minutes.do(scheduled_job)
 schedule.every().day.at("08:00").do(scheduled_job)
 schedule.every().day.at("11:30").do(scheduled_job)
 schedule.every().day.at("17:00").do(scheduled_job)
