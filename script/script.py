@@ -16,6 +16,7 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 from typing import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
+from helpers.check_new_link import check_and_store_new_links
 
 load_dotenv(override=True)
 BOT_TOKEN = os.getenv('BOT_TOKEN')
@@ -23,8 +24,6 @@ CHAT_ID = os.getenv('CHAT_ID')
 CHANNEL_ID = os.getenv('CHANNEL_ID_')
 EXTRA_CHANNEL_ID = os.getenv('EXTRA_CHANNEL_ID')  # New channel
 nltk.download("punkt")
-
-DEFAULT_IMG=""
 
 def make_get_request(url: str):
     try:
@@ -111,6 +110,11 @@ def lambda_handler(event, context):
         
 
     articles = threading_function(messages, make_article_request)
+
+    new_links = check_and_store_new_links(messages)
+    if not new_links:
+        print("⚠ Không có bài viết mới.")
+        return {"body": json.dumps([])}
     concurr_download_articles(articles=articles)
 
     summarized_contents = []
@@ -147,11 +151,14 @@ def scheduled_job():
     context = ""
     result = lambda_handler(event, context)  # Lấy tin tức
     articles = json.loads(result["body"])  # Chuyển JSON thành danh sách
+    if not articles:
+        print("⚠ Không có bài viết mới để gửi.")
+        return
     send_articles_to_server(articles, topic="tintuc")  # Gửi từng bài viết đến API
 
 # Lên lịch chạy theo giờ
 
-# schedule.every().minutes.do(scheduled_job)
+schedule.every().minutes.do(scheduled_job)
 schedule.every().day.at("08:00").do(scheduled_job)
 schedule.every().day.at("11:30").do(scheduled_job)
 schedule.every().day.at("17:00").do(scheduled_job)

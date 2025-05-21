@@ -14,7 +14,6 @@ app.use(express.json());
 
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-// app.use('/uploads', express.static('/etc/nginx/data/uploads'));
 
 let currentAccessToken = null;
 const JWT_SECRET = 'tôi-đã-ở-đây-power5@2024';
