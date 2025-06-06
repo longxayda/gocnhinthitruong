@@ -114,6 +114,34 @@ app.get('/api/articles/:topic', (req, res) => {
   });
 });
 
+// API lấy bài viết theo topic và id
+app.get('/api/articles/:topic/:id', (req, res) => {
+  const { topic, id } = req.params;
+  if (topic === "tintuc") {
+    db.get("SELECT * FROM articles WHERE topic = ? AND id = ?", [topic, id], (err, row) => {
+      if (err) {
+        console.error("Lỗi khi lấy bài viết theo topic và id:", err);
+        return res.status(500).json({ error: err.message });
+      }
+      if (!row) {
+        return res.status(404).json({ message: "Không tìm thấy bài viết!" });
+      }
+      res.json(row);
+    });
+  } else {
+    db.get("SELECT * FROM editor_articles WHERE topic = ? AND id = ?", [topic, id], (err, row) => {
+      if (err) {
+        console.error("Lỗi khi lấy bài viết theo topic và id:", err);
+        return res.status(500).json({ error: err.message });
+      }
+      if (!row) {
+        return res.status(404).json({ message: "Không tìm thấy bài viết!" });
+      }
+      res.json(row);
+    });
+  }
+});
+
 // API lấy tất cả bài viết từ bảng articles
 app.get('/api/articles', (req, res) => {
   console.log("Lấy tất cả bài viết (articles)");
@@ -200,9 +228,9 @@ app.post('/api/admin/login', async (req, res) => {
 
   const accessToken = jwt.sign({ username }, JWT_SECRET, { expiresIn: '1h' });
 
-  return res.json({ 
+  return res.json({
     message: 'Đăng nhập thành công.',
-    accessToken 
+    accessToken
   });
 });
 

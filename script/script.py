@@ -158,7 +158,7 @@ def scheduled_job():
 
 # Lên lịch chạy theo giờ
 
-schedule.every().minutes.do(scheduled_job)
+# schedule.every().minutes.do(scheduled_job)
 schedule.every().day.at("08:00").do(scheduled_job)
 schedule.every().day.at("11:30").do(scheduled_job)
 schedule.every().day.at("17:00").do(scheduled_job)
