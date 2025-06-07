@@ -105,13 +105,23 @@ app.post('/api/articles/:topic', (req, res) => {
 // API lấy bài viết theo topic từ bảng articles
 app.get('/api/articles/:topic', (req, res) => {
   const { topic } = req.params;
-  db.all("SELECT * FROM articles WHERE topic = ? ORDER BY created_at DESC", [topic], (err, rows) => {
-    if (err) {
-      console.error("LỖI SQL (articles):", err.message);
-      return res.status(500).json({ error: `Lỗi SQL: ${err.message}` });
-    }
-    res.json(rows);
-  });
+  if (topic === "tintuc") {
+    db.all("SELECT * FROM articles WHERE topic = ? ORDER BY created_at DESC", [topic], (err, rows) => {
+      if (err) {
+        console.error("LỖI SQL (articles):", err.message);
+        return res.status(500).json({ error: `Lỗi SQL: ${err.message}` });
+      }
+      res.json(rows);
+    });
+  } else {
+    db.all("SELECT * FROM editor_articles WHERE topic = ? ORDER BY created_at DESC", [topic], (err, rows) => {
+      if (err) {
+        console.error("LỖI SQL (articles):", err.message);
+        return res.status(500).json({ error: `Lỗi SQL: ${err.message}` });
+      }
+      res.json(rows);
+    });
+  }
 });
 
 // API lấy bài viết theo topic và id
